@@ -1,3 +1,20 @@
+#if defined(ARDUINO_AVR_PRO)
+
+const int col1 = 9 ; //column 1 is on pin 1...this is 1 in the data sheet
+const int col2 = 7 ; //column 2 is on pin 3
+const int col3 = 12; //column 3 is on pin 10
+const int col4 = 15 ; //column 4 is on pin 7
+const int col5 = 14; //column 5 is on pin 8
+const int row1 = 10 ; //row 1 is on pin 12
+const int row2 = 11 ; //row 2 is on pin 11
+const int row3 = 8 ; //row 3 is on pin 2
+const int row4 = 13 ; //row 4 is on pin 9
+const int row5 = 6 ; //row 5 is on pin 4
+const int row6 = 5 ; //row 6 is on pin 5
+const int row7 = 4 ; //row 7 is on pin 6
+
+#elif defined(ARDUINO_AVR_PROMICRO)
+
  //for simplicity the pins are given variable names so that it is easier to understand which light should turn on.
 const int col1 = 9 ; //column 1 is on pin 1...this is 1 in the data sheet
 const int col2 = 7 ; //column 2 is on pin 3
@@ -11,6 +28,12 @@ const int row4 = 15 ; //row 1 is on pin 9
 const int row5 = 6 ; //row 1 is on pin 4
 const int row6 = 5 ; //row 1 is on pin 5
 const int row7 = 4 ; //row 1 is on pin 6
+
+#else
+
+#error please define pins for board
+
+#endif
 
 const int rows = 7; //number of rows
 const int cols = 5; //number of columns
@@ -88,7 +111,7 @@ void loop() {
     //read in time
     //calculate time to wakeup
     t2 = millis() + 200;
-    t3 == t3++;
+
     Serial.print(nr);
     Serial.print(' ');
     Serial.print(nc);
@@ -102,7 +125,6 @@ void loop() {
   }
 }
 
-
 boolean debounce(boolean last)
 {
   boolean current = digitalRead(button);       //Read the button state
@@ -114,7 +136,7 @@ boolean debounce(boolean last)
   return current;                              //return the current value
 }
 
-int pongMode() {
+void pongMode() {
   offMode();
   setMode(nr, nc);//ball determined by bounce90Mode
   delay(1);
@@ -186,7 +208,7 @@ int pongMode() {
   }
 }
 
-int columnBounceMode() {
+void columnBounceMode() {
   if (nr <= 1) {
     dr = 1;
   }
@@ -198,7 +220,7 @@ int columnBounceMode() {
   setMode(nr, nc);
 }
 
-int bounce90Mode() {
+void bounce90Mode() {
   if (nc <= 1) {
     dc = 1;
   }
@@ -217,21 +239,20 @@ int bounce90Mode() {
   setMode(nr, nc);
 }
 
-int randomPladMode() {
+void randomPladMode() {
   digitalWrite(random(4, 15), HIGH);
   digitalWrite(random(4, 15), LOW);
 }
 
 
-int randomPixelMode () {
-
+void randomPixelMode () {
   int nr = random(1, rows + 1);
   int nc = random (1, cols + 1);
   offMode();
   setMode(nr, nc);
 }
 
-int stripeScrollMode () {
+void stripeScrollMode () {
   nc = nc + 1;
   nr = nr + 1;
   if (nc > cols ) {
@@ -244,7 +265,7 @@ int stripeScrollMode () {
   setMode(nr, nc);
 }
 
-int rowScrollMode() {
+void rowScrollMode() {
   nc = nc + 1;
   if (nc > cols) {
     nc = 1;
@@ -257,7 +278,7 @@ int rowScrollMode() {
   setMode(nr, nc);
 }
 
-int columnScrollMode() {
+void columnScrollMode() {
   nr = nr + 1;
   if (nr > rows ) {
     nr = 1;
@@ -286,7 +307,7 @@ void offMode()
   digitalWrite(row7, HIGH);
 }
 
-int  setMode(int nr, int nc)
+void setMode(int nr, int nc)
 {
   if (nc == 1)
   {
