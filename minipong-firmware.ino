@@ -25,12 +25,12 @@ const int col3 = 14; //column 3 is on pin 10
 const int col4 = 19; //column 4 is on pin 7
 const int col5 = 18; //column 5 is on pin 8
 const int row1 = 10; //row 1 is on pin 12
-const int row2 = 16; //row 1 is on pin 11
-const int row3 = 8 ; //row 1 is on pin 2
-const int row4 = 15; //row 1 is on pin 9
-const int row5 = 6 ; //row 1 is on pin 4
-const int row6 = 5 ; //row 1 is on pin 5
-const int row7 = 4 ; //row 1 is on pin 6
+const int row2 = 16; //row 2 is on pin 11
+const int row3 = 8 ; //row 3 is on pin 2
+const int row4 = 15; //row 4 is on pin 9
+const int row5 = 6 ; //row 5 is on pin 4
+const int row6 = 5 ; //row 6 is on pin 5
+const int row7 = 4 ; //row 7 is on pin 6
 
 #else
 
@@ -38,6 +38,7 @@ const int row7 = 4 ; //row 1 is on pin 6
 
 #endif
 
+const int DELAY_TIME = 200; // milliseconds to wait between redraws
 const int rows = 7; //number of rows
 const int cols = 5; //number of columns
 
@@ -54,7 +55,7 @@ enum Mode {
     PONG,
     count
 };
-Mode mode = COL_SCROLL;
+Mode mode = STRIPE_SCROLL;
 int nc = 1; //number column
 int nr = 1; //number row
 int dr = 1; //direction column (move forward or backward
@@ -358,7 +359,7 @@ void loop() {
 
     //read in time
     //calculate time to wakeup
-    t2 = millis() + 200;
+    t2 = millis() + DELAY_TIME;
 
     Serial.print(nr);
     Serial.print(' ');
