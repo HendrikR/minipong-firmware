@@ -40,6 +40,7 @@ ARDUINO_PORT = /dev/ttyACM0
 AVRDUDE_ARD_PROGRAMMER = avr109
 ##AVRDUDE_ARD_BAUDRATE = 115200
 BOARD_TAG = promicro # used for build dir
+BOARD_SUB = 8MHzatmega32U4
 VARIANT = promicro # used for include dir
 RESET_CMD = ./bootmode.py $(ARDUINO_PORT)
 

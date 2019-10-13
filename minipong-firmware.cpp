@@ -251,8 +251,15 @@ void bounce90Mode() {
 }
 
 void randomPladMode() {
+#if defined(ARDUINO_AVR_PRO)
   digitalWrite(random(4, 15), HIGH);
   digitalWrite(random(4, 15), LOW);
+#elif defined(ARDUINO_AVR_PROMICRO)
+  digitalWrite(random(4, 19), HIGH);
+  digitalWrite(random(4, 19), LOW);
+#else
+  #error undefined board variant
+#endif
 }
 
 
