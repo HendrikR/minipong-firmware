@@ -1,36 +1,23 @@
 #include <Arduino.h>
-#include <HardwareSerial.h>
+//#include <HardwareSerial.h>
 
+
+const int DELAY_TIME = 200; // milliseconds to wait between redraws
+constexpr int ROWS = 7; //number of rows
+constexpr int COLS = 5; //number of columns
+
+// Define the arduino pins for each column and row.
+// This depends on the model used.
 #if defined(ARDUINO_AVR_PRO)
-
-const int col1 = 9 ; //column 1 is on pin 1...this is 1 in the data sheet
-const int col2 = 7 ; //column 2 is on pin 3
-const int col3 = 12; //column 3 is on pin 10
-const int col4 = 15; //column 4 is on pin 7
-const int col5 = 14; //column 5 is on pin 8
-const int row1 = 10; //row 1 is on pin 12
-const int row2 = 11; //row 2 is on pin 11
-const int row3 = 8 ; //row 3 is on pin 2
-const int row4 = 13; //row 4 is on pin 9
-const int row5 = 6 ; //row 5 is on pin 4
-const int row6 = 5 ; //row 6 is on pin 5
-const int row7 = 4 ; //row 7 is on pin 6
+const int col_pin[] = {9, 7, 12, 15, 14};
+const int row_pin[] = {10, 11, 8, 13, 6, 5, 4};
+const int button_pin = 3;
 
 #elif defined(ARDUINO_AVR_PROMICRO)
 
- //for simplicity the pins are given variable names so that it is easier to understand which light should turn on.
-const int col1 = 9 ; //column 1 is on pin 1...this is 1 in the data sheet
-const int col2 = 7 ; //column 2 is on pin 3
-const int col3 = 14; //column 3 is on pin 10
-const int col4 = 19; //column 4 is on pin 7
-const int col5 = 18; //column 5 is on pin 8
-const int row1 = 10; //row 1 is on pin 12
-const int row2 = 16; //row 2 is on pin 11
-const int row3 = 8 ; //row 3 is on pin 2
-const int row4 = 15; //row 4 is on pin 9
-const int row5 = 6 ; //row 5 is on pin 4
-const int row6 = 5 ; //row 6 is on pin 5
-const int row7 = 4 ; //row 7 is on pin 6
+const int col_pin[] = {9, 7, 14, 19, 18};
+const int row_pin[] = {10, 16, 8, 15, 6, 5, 4};
+const int button_pin = 3;
 
 #else
 
@@ -38,13 +25,12 @@ const int row7 = 4 ; //row 7 is on pin 6
 
 #endif
 
-const int DELAY_TIME = 200; // milliseconds to wait between redraws
-const int rows = 7; //number of rows
-const int cols = 5; //number of columns
+// represents the LED matrix state in memory.
+bool matrix[ROWS*COLS];
 
-const int button = 3;
 boolean lastButton = LOW;    //Last Button State
 boolean currentButton = LOW; //Current Button State
+
 enum Mode {
     STRIPE_SCROLL,
     ROW_SCROLL,
@@ -55,6 +41,7 @@ enum Mode {
     PONG,
     count
 };
+
 Mode mode = STRIPE_SCROLL;
 int nc = 1; //number column
 int nr = 1; //number row
@@ -68,81 +55,54 @@ int t3;
 
 void offMode()
 {
-  digitalWrite(col1, LOW);
-  digitalWrite(col2, LOW);
-  digitalWrite(col3, LOW);
-  digitalWrite(col4, LOW);
-  digitalWrite(col5, LOW);
-  digitalWrite(row1, HIGH);
-  digitalWrite(row2, HIGH);
-  digitalWrite(row3, HIGH);
-  digitalWrite(row4, HIGH);
-  digitalWrite(row5, HIGH);
-  digitalWrite(row6, HIGH);
-  digitalWrite(row7, HIGH);
+  for (int i=0; i<COLS; i++)
+    digitalWrite(col_pin[i], LOW);
+  for (int i=0; i<ROWS; i++)
+    digitalWrite(row_pin[i], HIGH);
 }
 
 void setMode(int nr, int nc)
 {
-  if (nc == 1)
-  {
-    digitalWrite(col1, HIGH);
-  }
-  if (nc == 2)
-  {
-    digitalWrite(col2, HIGH);
-  }
-  if (nc == 3)
-  {
-    digitalWrite(col3, HIGH);
-  }
-  if (nc == 4)
-  {
-    digitalWrite(col4, HIGH);
-  }
-  if (nc == 5)
-  {
-    digitalWrite(col5, HIGH);
-  }
+  digitalWrite(col_pin[nc-1], HIGH);
+  digitalWrite(row_pin[nr-1], LOW);
+}
 
+void offMatrix()
+{
+  for (int c=0; c<COLS; c++) {
+    for (int r=0; r<ROWS; r++) {
+      matrix[c*ROWS + r] = false;
+    }
+  }
+}
 
-  if ( nr == 1)
-  {
-    digitalWrite(row1, LOW);
-  }
-  if ( nr == 2)
-  {
-    digitalWrite(row2, LOW);
-  }
-  if ( nr == 3)
-  {
-    digitalWrite(row3, LOW);
-  }
-  if ( nr == 4)
-  {
-    digitalWrite(row4, LOW);
-  }
-  if ( nr == 5)
-  {
-    digitalWrite(row5, LOW);
-  }
-  if ( nr == 6)
-  {
-    digitalWrite(row6, LOW);
-  }
-  if ( nr == 7)
-  {
-    digitalWrite(row7, LOW);
+void setMatrix(int nr, int nc)
+{
+  // nr, nc start at 1; matrix starts at 0
+  matrix[(nc-1)*ROWS + (nr-1)] = true;
+}
+
+void drawMatrix() {
+  for (int c=0; c<COLS; c++) {
+    digitalWrite(col_pin[c], HIGH);
+    for (int r=0; r<ROWS; r++)
+      digitalWrite(row_pin[r], matrix[c*ROWS+r] ? LOW : HIGH);
+    delay(5); // with no delay, pixels "bleed over"
+
+    // switch it off again
+    digitalWrite(col_pin[c], LOW);
+    for (int r=0; r<ROWS; r++)
+      digitalWrite(row_pin[r], matrix[c*ROWS+r] ? LOW : HIGH);
   }
 }
 
 boolean debounce(boolean last)
 {
-  boolean current = digitalRead(button);       //Read the button state
+  boolean current = digitalRead(button_pin);   //Read the button state
   if (last != current)                         //if it's different...
   {
     delay(5);                                  //wait 5ms
-    current = digitalRead(button);             //read it again
+    current = digitalRead(button_pin);         //read it again
   }
   return current;                              //return the current value
 }
@@ -164,14 +124,14 @@ void pongMode() {
     setMode(1,3);
     delay(1);
     }
-  else if (nc + p1 >= cols) {
-    setMode(1, cols);
+  else if (nc + p1 >= COLS) {
+    setMode(1, COLS);
     delay(1);
     offMode();
-    setMode(1, cols-1);
+    setMode(1, COLS-1);
     delay(1);
     offMode();
-    setMode(1, cols-2);
+    setMode(1, COLS-2);
     delay(1);
   }
   else {
@@ -188,33 +148,33 @@ void pongMode() {
   //paddle2
   offMode();
   if (nc + p2 <= 1){
-    setMode(rows, 1);
+    setMode(ROWS, 1);
     delay(1);
     offMode();
-    setMode(rows,2);
+    setMode(ROWS,2);
     delay(1);
     offMode();
-    setMode(rows,3);
+    setMode(ROWS,3);
     delay(1);
     }
-  else if (nc + p2 >= cols) {
-    setMode(rows, cols);
+  else if (nc + p2 >= COLS) {
+    setMode(ROWS, COLS);
     delay(1);
     offMode();
-    setMode(rows, cols-1);
+    setMode(ROWS, COLS-1);
     delay(1);
     offMode();
-    setMode(rows, cols-2);
+    setMode(ROWS, COLS-2);
     delay(1);
   }
   else {
-    setMode(rows, nc+p2-1);
+    setMode(ROWS, nc+p2-1);
     delay(1);
     offMode();
-    setMode(rows, nc+p2);
+    setMode(ROWS, nc+p2);
     delay(1);
     offMode();
-    setMode(rows, nc+p2+1);
+    setMode(ROWS, nc+p2+1);
     delay(1);
   }
 }
@@ -223,7 +183,7 @@ void columnBounceMode() {
   if (nr <= 1) {
     dr = 1;
   }
-  if (nr >= rows) {
+  if (nr >= ROWS) {
     dr = -1;
   }
   nr = nr + dr;
@@ -235,13 +195,13 @@ void bounce90Mode() {
   if (nc <= 1) {
     dc = 1;
   }
-  if (nc >= cols) {
+  if (nc >= COLS) {
     dc = -1;
   }
   if (nr <= 1) {
     dr = 1;
   }
-  if (nr >= rows) {
+  if (nr >= ROWS) {
     dr = -1;
   }
   nc = nc + dc;
@@ -264,8 +224,8 @@ void randomPladMode() {
 
 
 void randomPixelMode () {
-  int nr = random(1, rows + 1);
-  int nc = random (1, cols + 1);
+  int nr = random(1, ROWS + 1);
+  int nc = random (1, COLS + 1);
   offMode();
   setMode(nr, nc);
 }
@@ -273,10 +233,10 @@ void randomPixelMode () {
 void stripeScrollMode () {
   nc = nc + 1;
   nr = nr + 1;
-  if (nc > cols ) {
+  if (nc > COLS ) {
     nc = 1;
   }
-  if (nr > rows ) {
+  if (nr > ROWS ) {
     nr = 1;
   }
   offMode();
@@ -285,11 +245,11 @@ void stripeScrollMode () {
 
 void rowScrollMode() {
   nc = nc + 1;
-  if (nc > cols) {
+  if (nc > COLS) {
     nc = 1;
     nr = nr + 1;
   }
-  if (nr > rows ) {
+  if (nr > ROWS ) {
     nr = 1;
   }
   offMode();
@@ -298,11 +258,11 @@ void rowScrollMode() {
 
 void columnScrollMode() {
   nr = nr + 1;
-  if (nr > rows ) {
+  if (nr > ROWS ) {
     nr = 1;
     nc = nc + 1;
   }
-  if (nc > cols) {
+  if (nc > COLS) {
     nc = 1;
   }
   offMode();
@@ -310,18 +270,26 @@ void columnScrollMode() {
 }
 
 void setup() {
-  pinMode (button, INPUT_PULLUP);  //Set button as input (not required)
+  pinMode (button_pin, INPUT_PULLUP);  //Set button as input (not required)
   for (int i = 4; i < 21; i++) {
     pinMode (i, OUTPUT); //Set all pins to output
   }
   pinMode (20, HIGH);
   t2 = 0;
   t3 = 1;
-  Serial.begin(9600);
+  //Serial.begin(9600);
 }
 
 
 void loop() {
+  // draw an "F"
+  for(int r=7; r-->0;) setMatrix(r+1,1);
+  for(int c=5; c-->1;) setMatrix(1,c+1);
+  for(int c=4; c-->1;) setMatrix(4,c+1);
+//  for(int c=5; c-->1;) setMatrix(7,c);
+  drawMatrix();
+}
+void bloop() {
   currentButton = debounce(lastButton);           //read debounced state
   if (lastButton == LOW && currentButton == HIGH) //if it was pressed...
   {
@@ -353,11 +321,11 @@ void loop() {
       bounce90Mode();
     }
     if (mode == PONG) {
-      if (nr == 1 || nr == rows ) {
+      if (nr == 1 || nr == ROWS ) {
         pongball = random(1, 5);
       }
       if (nr==1){p1=random(-1, 1);}
-      if (nr==cols){p2=random(-1, 1);}
+      if (nr==COLS){p2=random(-1, 1);}
       if (pongball == 1) {
         columnBounceMode();
       }
@@ -367,7 +335,7 @@ void loop() {
     //read in time
     //calculate time to wakeup
     t2 = millis() + DELAY_TIME;
-
+/*
     Serial.print(nr);
     Serial.print(' ');
     Serial.print(nc);
@@ -375,6 +343,7 @@ void loop() {
     Serial.print(pongball);
     Serial.print(' ');
     Serial.println(mode);
+*/
   }
   if (mode == PONG) {
     pongMode();

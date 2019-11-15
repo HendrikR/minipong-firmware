@@ -38,17 +38,18 @@ AVRDUDE_ISP_BAUDRATE=115200
 ## ARDUINO Micro ("Original" von Christians Technik-Shop, mit Micro-USB)
 ARDUINO_PORT = /dev/ttyACM0
 AVRDUDE_ARD_PROGRAMMER = avr109
+BOOTLOADER_PARENT=hardware/${ALTERNATE_CORE}/avr/bootloaders
 ##AVRDUDE_ARD_BAUDRATE = 115200
 BOARD_TAG = promicro # used for build dir
-BOARD_SUB = 8MHzatmega32U4
+BOARD_SUB = 16MHzatmega32U4
 VARIANT = promicro # used for include dir
 RESET_CMD = ./bootmode.py $(ARDUINO_PORT)
-
-#AVRDUDE_OPTS = -v -e
+#AVRDUDE_OPTS = -v -D
+#BOARD_TAG = leonardo # Die Original-Firmware gibt sich als "Leonardo" aus
 
 #TARGET       = minipong
 
-include ../../_MAKEFILE/Arduino.mk
+include ../_MAKEFILE/Arduino.mk
 
 # Verbindungen
 # ARDUINO PRO Mini (3.3V-Variante):
