@@ -1,4 +1,4 @@
-ARDUINO_DIR = /usr/share/arduino
+ARCHITECTURE=avr
 ALTERNATE_CORE = sparkfun
 ARDUINO_SKETCHBOOK = .
 
@@ -46,7 +46,7 @@ VARIANT = promicro # used for include dir
 RESET_CMD = ./bootmode.py $(ARDUINO_PORT)
 #AVRDUDE_OPTS = -v -D
 #BOARD_TAG = leonardo # Die Original-Firmware gibt sich als "Leonardo" aus
-
+MONITOR_CMD=picocom
 #TARGET       = minipong
 
 include ../_MAKEFILE/Arduino.mk

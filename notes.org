@@ -1,0 +1,5 @@
+# mySmartUSB light-Stecker:
+# (männl., mit Sicht auf die Pinholes, "rot" ist die Seite mit dem roten Kabel in Richtung des USB-Sticks, die Striche oben(_-_) markieren die Orientierungsnut)
+#     | _____|------|____
+#     | MISO | SCK  | RST
+# rot | VTG  | MOSI | GND

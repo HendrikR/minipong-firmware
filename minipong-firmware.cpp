@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include "font-5x7.hpp"
 //#include <HardwareSerial.h>
 
 
@@ -78,8 +79,12 @@ void offMatrix()
 
 void setMatrix(int nr, int nc)
 {
-  // nr, nc start at 1; matrix starts at 0
-  matrix[(nc-1)*ROWS + (nr-1)] = true;
+  matrix[nc*ROWS + nr] = true;
+}
+
+void unsetMatrix(int nr, int nc)
+{
+  matrix[nc*ROWS + nr] = false;
 }
 
 void drawMatrix() {
@@ -280,14 +285,53 @@ void setup() {
   //Serial.begin(9600);
 }
 
+#define min(a,b) ( (a) < (b) ? (a) : (b) )
+#define max(a,b) ( (a) > (b) ? (a) : (b) )
+
+void drawLetter(char c, int shift=0) {
+  c -= ' ';
+  //offMatrix();
+  for(int col = 0; col<COLS; col++){
+    if (col-shift < 0 || col-shift >= COLS) continue;
+    unsigned char fcol = font_5x7_data[5*c + (4-col+shift)];
+    for(int row=0; row<ROWS; row++) {
+      if (fcol & (1<<(6-row))) setMatrix(row, col);
+      else unsetMatrix(row, col);
+    }
+  }
+}
+
+const unsigned LETTER_DELAY = 400;
+
+void drawString(const char* str) {
+  for (int i=0; i<strlen(str); i++) {
+    int timer = millis();
+    drawLetter(str[i], 0);
+    while(millis() - timer < LETTER_DELAY) drawMatrix();
+  }
+  offMatrix();
+  delay(2*LETTER_DELAY);
+}
+
+void scrollString(const char* str) {
+  char lastLetter = ' ';
+  for (int i=0; i<strlen(str); i++) {
+    for(int shift=0; shift<(COLS+0); shift++) {
+      // iterating to COLS+1, so there is a one-column gap between the letters
+      drawLetter(lastLetter, shift);
+      drawLetter(str[i], shift-(COLS+0));
+      int timer = millis();
+      while(millis() - timer < 100) drawMatrix();
+    }
+    lastLetter = str[i];
+  }
+  offMatrix();
+  delay(2*LETTER_DELAY);
+}
 
 void loop() {
   // draw an "F"
-  for(int r=7; r-->0;) setMatrix(r+1,1);
-  for(int c=5; c-->1;) setMatrix(1,c+1);
-  for(int c=4; c-->1;) setMatrix(4,c+1);
-//  for(int c=5; c-->1;) setMatrix(7,c);
-  drawMatrix();
+  scrollString("1337 scrolltext");
 }
 void bloop() {
   currentButton = debounce(lastButton);           //read debounced state
